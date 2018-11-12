@@ -276,7 +276,25 @@ void printScore() {
 	cout << endl;
 }
 
+void imageCollage(const Image &bottomLeft, const Image &bottomRight, const Image &topLeft, const Image &topRight, vector<Image::Pixel> &resultingPixels) {
 
+	for (unsigned int i = 0; i < bottomLeft.header.height; i++) {
+		for (unsigned int j = i*bottomLeft.header.width; j < (i*bottomLeft.header.width +bottomLeft.header.width); j++) {
+			resultingPixels.push_back(bottomLeft.pixels[j]);
+		}
+		for (unsigned int j = i*bottomRight.header.width; j < (i*bottomRight.header.width +bottomRight.header.width); j++) {
+			resultingPixels.push_back(bottomRight.pixels[j]);
+		}
+	}
+	for (unsigned int i = 0; i < topLeft.header.height; i++) {
+		for (unsigned int j = i*topLeft.header.width; j < (i*topLeft.header.width +topLeft.header.width); j++) {
+			resultingPixels.push_back(topLeft.pixels[j]);
+		}
+		for (unsigned int j = i*topRight.header.width; j < (i*topRight.header.width +topRight.header.width); j++) {
+			resultingPixels.push_back(topRight.pixels[j]);
+		}
+	}
+}
 
 int main(int argc, char *argv[])
 {
@@ -334,7 +352,6 @@ int main(int argc, char *argv[])
 	MultiplyingPixels(image1.pixels, image2.pixels, image3.pixels);
 
 	image1.pixels.clear();
-	cout << "**Third image to be loaded** " << endl;
 	ReadingData(filePath+"text.tga", image1);
 	ScreenningPixels(image1.pixels, image3.pixels, resultingPixels);
 
@@ -361,7 +378,6 @@ int main(int argc, char *argv[])
 	MultiplyingPixels(image1.pixels, image2.pixels, image3.pixels);
 	
 	image1.pixels.clear();
-	cout << "**Third image to be loaded** " << endl;
 	ReadingData(filePath+"pattern2.tga", image1);
 	SubstractingPixels(image1, image3, resultingPixels);
 
@@ -525,4 +541,34 @@ int main(int argc, char *argv[])
 		totalScore+=11;
 	}
 	printScore();
+
+	// Task 11
+	cout << "*********Starting Task 11**********" << endl;
+	cout << endl;
+	image1.pixels.clear();
+	image2.pixels.clear();
+	image3.pixels.clear();
+	resultingPixels.clear();
+	Image image4;
+	Image image5;
+
+	ReadingData(filePath+"text.tga", image1);
+	ReadingData(filePath+"pattern1.tga", image2);
+	ReadingData(filePath+"car.tga", image3);
+	ReadingData(filePath+"circles.tga", image4);
+
+	imageCollage(image1, image2, image3, image4, resultingPixels);
+
+	image5.header = image1.header;
+	image5.header.height = image1.header.height + image3.header.height;
+	image5.header.width = image1.header.width + image2.header.width;
+	image5.pixels = resultingPixels;
+	passedTest = false;
+	passedTest = TestingResults(image5, "extraCredit.tga", "EXAMPLE_extraCredit.tga");
+
+	if(passedTest){
+		totalScore+=5;
+	}
+	printScore();
+
 };
