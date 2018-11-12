@@ -38,7 +38,7 @@ public:
 };
 
 void ReadingData(string fileName, Image &image1) {
-
+	
 	ifstream input(fileName, ios_base::binary);
 	if (input.is_open()) {
 		input.read((char*)&image1.header.idLength, 1);
@@ -71,7 +71,7 @@ void ReadingData(string fileName, Image &image1) {
 	}
 }
 void WritingData(const Image &image3, string fileName) {
-	ofstream output(fileName, ios_base::binary);
+	ofstream output("output/"+fileName, ios_base::binary);
 	//Picuter.header has header info
 	//Picute.pixels has pixels
 	if (output.is_open()) {
@@ -123,10 +123,13 @@ void TestingResults(const Image &result, string fileName) {
 	cout << "********************" << endl;
 	cout << "Testing resulting image!" << endl;
 	Image example;
-	ReadingData(GetFileName(), example);
+	string exampleName = "examples/"+GetFileName();
+	cout << "Example filename: " <<exampleName << endl;
+	ReadingData( exampleName, example);
 	cout << "Starting to compare pixels..." << endl; cout << endl;
 	int count = 0;
 	int index = 0;
+	cout << "Example pic size: "<<example.pixels.size() << endl;
 	for (unsigned int i = 0; i < example.pixels.size(); i++) {
 		if (result.pixels[i].blueVal != example.pixels[i].blueVal || result.pixels[i].greenVal != example.pixels[i].greenVal || result.pixels[i].redVal != example.pixels[i].redVal) {
 			index = i;
@@ -379,11 +382,12 @@ void SubstractingPixels(const Image &bottomLayer, const Image &topLayer, vector<
 	}
 }
 
-int main()
+int main(int argc, char *argv[])
 {
 	Image image1;
 	Image image2;	
 	Image image3;
+	string filePath = "input/";
 	
 	vector<Image::Pixel> resultingPixels;
 
@@ -398,13 +402,14 @@ int main()
 		"8. Load car and write each channel to a separate file" << endl <<
 		"9. Combine layer_red, layer_blue and layer_green” into one file" << endl <<
 		"10. Rotate it text2 180 degrees" << endl;
-	unsigned int task = 0;
-	cin >> task;
+	// unsigned int task = 0;
+	// cin >> task;
+	unsigned int task = stoi(argv[1]);
 	switch (task)
 	{
 	case 1:
-		ReadingData(GetFileName(), image1);
-		ReadingData(GetFileName(), image2);
+		ReadingData(filePath+argv[2], image1);
+		ReadingData(filePath+argv[3], image2);
 
 		image3.header = image1.header;
 		MultiplyingPixels(image1.pixels, image2.pixels, image3.pixels);
@@ -412,8 +417,8 @@ int main()
 		TestingResults(image3, "part1.tga");
 		break;
 	case 2:
-		ReadingData(GetFileName(), image1);
-		ReadingData(GetFileName(), image2);
+		ReadingData(filePath+argv[2], image1);
+		ReadingData(filePath+argv[3], image2);
 		
 		image3.header = image1.header;
 		SubstractingPixels(image1, image2, image3.pixels);
@@ -421,14 +426,14 @@ int main()
 
 		break;
 	case 3:
-		ReadingData(GetFileName(), image1);
-		ReadingData(GetFileName(), image2);
+		ReadingData(filePath+argv[2], image1);
+		ReadingData(filePath+argv[3], image2);
 		image3.header = image1.header;
 		MultiplyingPixels(image1.pixels, image2.pixels, image3.pixels);
 
 		image1.pixels.clear();
 		cout << "**Third image to be loaded** " << endl;
-		ReadingData(GetFileName(), image1);
+		ReadingData(filePath+argv[4], image1);
 		ScreenningPixels(image1.pixels, image3.pixels, resultingPixels);
 
 		image3.pixels = resultingPixels;
@@ -437,15 +442,15 @@ int main()
 
 		break;
 	case 4:
-		ReadingData(GetFileName(), image1);
-		ReadingData(GetFileName(), image2);
+		ReadingData(filePath+argv[2], image1);
+		ReadingData(filePath+argv[3], image2);
 
 		image3.header = image1.header;
 		MultiplyingPixels(image1.pixels, image2.pixels, image3.pixels);
 		
 		image1.pixels.clear();
 		cout << "**Third image to be loaded** " << endl;
-		ReadingData(GetFileName(), image1);
+		ReadingData(filePath+argv[4], image1);
 		SubstractingPixels(image1, image3, resultingPixels);
 
 		image3.pixels = resultingPixels;
@@ -453,8 +458,8 @@ int main()
 		TestingResults(image3, "part4.tga");
 		break;
 	case 5:
-		ReadingData(GetFileName(), image1);
-		ReadingData(GetFileName(), image2);
+		ReadingData(filePath+argv[2], image1);
+		ReadingData(filePath+argv[3], image2);
 
 		image3.header = image1.header;
 		OverlayingPixels(image1.pixels, image2.pixels, image3.pixels);
@@ -462,7 +467,7 @@ int main()
 		TestingResults(image3, "part5.tga");
 		break;
 	case 6:
-		ReadingData(GetFileName(), image3);
+		ReadingData(filePath+argv[2], image3);
 		int value;
 		for (unsigned int i = 0; i < image3.pixels.size();i++) {
 			value = image3.pixels[i].greenVal + 200;
@@ -478,7 +483,7 @@ int main()
 		break;
 
 	case 7:
-		ReadingData(GetFileName(), image3);
+		ReadingData(filePath+argv[2], image3);
 		//float temp;
 		for (unsigned int i = 0; i < image3.pixels.size();i++) {
 			//Red channel by 4 and blue channel by 0
@@ -499,7 +504,7 @@ int main()
 		break;
 		
 	case 8:
-		ReadingData(GetFileName(), image1);		
+		ReadingData(filePath+argv[2], image1);		
 		image2.header = image1.header;
 
 		for (unsigned int i = 0; i < image1.pixels.size(); i++) {
@@ -530,9 +535,9 @@ int main()
 		break;
 
 	case 9:
-		ReadingData(GetFileName(), image1);//layer red
-		ReadingData(GetFileName(), image2);//layer blue
-		ReadingData(GetFileName(), image3);//layer green
+		ReadingData(filePath+argv[2], image1);//layer red
+		ReadingData(filePath+argv[3], image2);//layer blue
+		ReadingData(filePath+argv[4], image3);//layer green
 	
 		for (unsigned int i = 0; i < image1.pixels.size(); i++) {
 			image1.pixels[i].blueVal = image2.pixels[i].blueVal;
@@ -544,7 +549,7 @@ int main()
 		break;
 
 	default:
-		ReadingData(GetFileName(), image3);
+		ReadingData(filePath+argv[2], image3);
 
 		for (unsigned int i = image3.pixels.size()-1; i < -1 ; i--) {			
 			resultingPixels.push_back(image3.pixels[i]);
