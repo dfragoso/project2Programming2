@@ -37,6 +37,8 @@ public:
 	Header header;
 };
 
+unsigned int totalScore = 0;
+
 void ReadingData(string fileName, Image &image1) {
 	
 	ifstream input(fileName, ios_base::binary);
@@ -101,35 +103,19 @@ void WritingData(const Image &image3, string fileName) {
 
 		output.close();
 	}
-	cout << "A new .tga file has been created called " << fileName << endl;
+	
 }
-string GetFileName() {
-	cout << "Write the name of the file: ";
-	string input = "";
-	cin >> input;
-	input += ".tga";
-	cout << "The file name is: " << input << endl;
-	return input;
-}
-void CheckingHeaders(const Image &topLayer, const Image &result) {
-	cout << "Checking the header info:" << endl <<
-		"Top layer id lenght: " << topLayer.header.idLength << "		Resulting picture: " << result.header.idLength << endl <<
-		"Top layer width: " << topLayer.header.width << "		Resulting picture: " << result.header.width << endl <<
-		"Top layer lenght: " << topLayer.header.height << "		Resulting picture: " << result.header.height << endl;
-}
+
 /***Tasks***/
-void TestingResults(const Image &result, string fileName) {
+bool TestingResults(const Image &result, string fileName, string exampleName) {
 	WritingData(result, fileName);
-	cout << "********************" << endl;
-	cout << "Testing resulting image!" << endl;
+
 	Image example;
-	string exampleName = "examples/"+GetFileName();
-	cout << "Example filename: " <<exampleName << endl;
+	exampleName = "examples/"+exampleName;
 	ReadingData( exampleName, example);
-	cout << "Starting to compare pixels..." << endl; cout << endl;
+	
 	int count = 0;
 	int index = 0;
-	cout << "Example pic size: "<<example.pixels.size() << endl;
 	for (unsigned int i = 0; i < example.pixels.size(); i++) {
 		if (result.pixels[i].blueVal != example.pixels[i].blueVal || result.pixels[i].greenVal != example.pixels[i].greenVal || result.pixels[i].redVal != example.pixels[i].redVal) {
 			index = i;
@@ -139,41 +125,12 @@ void TestingResults(const Image &result, string fileName) {
 	if (count == 0) {
 		cout << "All tests passed! Yayyy!!!" << endl;
 		cout << endl;
-	}
-	else if (count == example.pixels.size()) {
-		cout <<"All tests failed :(" << endl << "For example: " << endl;
-		cout << "Test " << index << " failed" << endl <<
-			"Created picture values: " <<
-			"Blue: " << toascii(result.pixels[index].blueVal) <<
-			" Green: " << toascii(result.pixels[index].greenVal) <<
-			" Red: " << toascii(result.pixels[index].redVal) << endl <<
-			"Example picture values: " <<
-			"Blue: " << toascii(example.pixels[index].blueVal) <<
-			" Green: " << toascii(example.pixels[index].greenVal) <<
-			" Red: " << toascii(example.pixels[index].redVal) << endl;
-		cout << "Test 0 failed" << endl <<
-			"Created picture values: " <<
-			"Blue: " << toascii(result.pixels[0].blueVal) <<
-			" Green: " << toascii(result.pixels[0].greenVal) <<
-			" Red: " << toascii(result.pixels[0].redVal) << endl <<
-			"Example picture values: " <<
-			"Blue: " << toascii(example.pixels[0].blueVal) <<
-			" Green: " << toascii(example.pixels[0].greenVal) <<
-			" Red: " << toascii(example.pixels[0].redVal) << endl;
-		cout << endl;
+		return true;
 	}else{
-		cout << count << " tests failed :(" << endl << "For example: " << endl;
-		cout << "Test " << index << " failed" << endl <<
-			"Created picture values: " <<
-			"Blue: " << toascii(result.pixels[index].blueVal) <<
-			" Green: " << toascii(result.pixels[index].greenVal) <<
-			" Red: " << toascii(result.pixels[index].redVal) << endl <<
-			"Example picture values: " <<
-			"Blue: " << toascii(example.pixels[index].blueVal) <<
-			" Green: " << toascii(example.pixels[index].greenVal) <<
-			" Red: " << toascii(example.pixels[index].redVal) << endl;
-		cout << endl;
+		cout << count << " tests failed :(" << endl;
+		
 	}
+	return false;
 }
 
 void MultiplyingPixels(const vector<Image::Pixel>  &topLayer, const vector<Image::Pixel>  &bottomLayer, vector<Image::Pixel> &resultingPixels) {
@@ -208,7 +165,7 @@ void OverlayingPixels(vector<Image::Pixel> &topLayer, vector<Image::Pixel> &bott
 	for (unsigned int i = 0; i < bottomLayer.size(); i++) {
 		Image::Pixel pixelin;
 
-		if (bottomLayer[i].blueVal / 255 <= 0.5) {
+		if ((float)bottomLayer[i].blueVal / 255 <= 0.5) {
 			blue = ((topLayer[i].blueVal / 255.0) * (bottomLayer[i].blueVal / 255.0));
 			if ((blue * 2) > 1) {
 				pixelin.blueVal = 255;
@@ -228,7 +185,7 @@ void OverlayingPixels(vector<Image::Pixel> &topLayer, vector<Image::Pixel> &bott
 			}
 		}
 
-		if (bottomLayer[i].greenVal / 255 <= 0.5) {
+		if ((float)bottomLayer[i].greenVal / 255 <= 0.5) {
 			green = ((topLayer[i].greenVal / 255.0) * (bottomLayer[i].greenVal / 255.0));
 			if ((green * 2) > 1) {
 				pixelin.greenVal = 255;
@@ -248,7 +205,7 @@ void OverlayingPixels(vector<Image::Pixel> &topLayer, vector<Image::Pixel> &bott
 			}
 		}
 
-		if (bottomLayer[i].redVal / 255 <= 0.5) {
+		if ((float)bottomLayer[i].redVal / 255 <= 0.5) {
 			red = ((topLayer[i].redVal / 255.0) * (bottomLayer[i].redVal / 255.0));
 			if ((red * 2) > 1) {
 				pixelin.redVal = 255;
@@ -269,74 +226,6 @@ void OverlayingPixels(vector<Image::Pixel> &topLayer, vector<Image::Pixel> &bott
 		}
 
 
-		////Apply multiplication agorithm
-		//if ((bottomLayer[i].blueVal/255 <= 0.5) || (bottomLayer[i].redVal/255 <= 0.5) || (bottomLayer[i].greenVal/255 <= 0.5)) {
-		//	blue = ((topLayer[i].blueVal / 255.0) * (bottomLayer[i].blueVal / 255.0));
-		//	green = ((topLayer[i].greenVal / 255.0) * (bottomLayer[i].greenVal / 255.0));
-		//	red = ((topLayer[i].redVal / 255.0) * (bottomLayer[i].redVal / 255.0));
-		//	/*pixelin.blueVal = ((topLayer[i].blueVal / 255.0) * (bottomLayer[i].blueVal / 255.0))*255.0 + 0.5f;
-		//	pixelin.greenVal = ((topLayer[i].greenVal / 255.0) * (bottomLayer[i].greenVal / 255.0))*255.0 + 0.5f;
-		//	pixelin.redVal = ((topLayer[i].redVal / 255.0) * (bottomLayer[i].redVal / 255.0))*255.0 + 0.5f;*/
-		//	
-		//	if ((red * 2) > 1) {
-		//		pixelin.redVal = 255;
-		//	}
-		//	else {
-		//		pixelin.redVal = (red * 2)*255.0 + 0.5f;
-		//	}
-		//	
-		//	if ((blue * 2) > 1) {
-		//		pixelin.blueVal = 255;
-		//	}
-		//	else {
-		//		pixelin.blueVal = (blue*2)*255.0 + 0.5f;
-		//	}
-		//	
-		//	if ((green * 2) > 1) {
-		//		pixelin.greenVal = 255;
-		//	}
-		//	else {
-		//		pixelin.greenVal = (green * 2)*255.0 + 0.5f;
-		//	}
-		//	
-		//}
-		//
-		//else {	//Apply screenning agorithm	
-		//	blue = (((255 - topLayer[i].blueVal) / 255.0) * ((255 - bottomLayer[i].blueVal) / 255.0));
-		//	green = (((255 - topLayer[i].greenVal) / 255.0) * ((255 - bottomLayer[i].greenVal) / 255.0));
-		//	red = (((255 - topLayer[i].redVal) / 255.0) * ((255 - bottomLayer[i].redVal) / 255.0));
-		//	/*pixelin.blueVal =  (((255 - topLayer[i].blueVal) / 255.0) * ((255 - bottomLayer[i].blueVal) / 255.0))*255.0 + 0.5f;
-		//	pixelin.greenVal = (((255 - topLayer[i].greenVal) / 255.0) * ((255 - bottomLayer[i].greenVal) / 255.0))*255.0 + 0.5f;
-		//	pixelin.redVal = (((255 - topLayer[i].redVal) / 255.0) * ((255 - bottomLayer[i].redVal) / 255.0))*255.0 + 0.5f;*/
-		//	
-		//		if ((red * 2) > 1) {
-		//			pixelin.redVal = 0;
-		//		}
-		//		else {
-		//			red *= 2;
-		//			pixelin.redVal = 255 -(unsigned char)(red*255.0 + 0.5f);
-		//		}
-		//	
-		//	
-		//		if ((blue * 2) > 1) {
-		//			pixelin.blueVal = 0;
-		//		}
-		//		else {
-		//			blue *= 2;
-		//			pixelin.blueVal = 255 - (unsigned char)(blue*255.0 + 0.5f);
-		//		}
-		//	
-		//	
-		//		if ((green * 2) > 1) {
-		//			green = 0;
-		//		}
-		//		else {
-		//			green *= 2;
-		//			pixelin.greenVal = 255 - (unsigned char)(green*255.0 + 0.5f);
-		//		}
-		//	
-		//}
-		//
 		resultingPixels.push_back(pixelin);
 	}	
 }
@@ -382,183 +271,258 @@ void SubstractingPixels(const Image &bottomLayer, const Image &topLayer, vector<
 	}
 }
 
+void printScore() {
+	cout << "Your current score is: " << totalScore << "/110" << endl;
+	cout << endl;
+}
+
+
+
 int main(int argc, char *argv[])
 {
 	Image image1;
 	Image image2;	
 	Image image3;
 	string filePath = "input/";
-	
+	bool passedTest = false;	
 	vector<Image::Pixel> resultingPixels;
 
-	cout << "Choose the task: " << endl <<
-		"1. Multiply layer1(top) and pattern1(bottom)" << endl <<
-		"2. Substract layer2(top) and car(bottom)" << endl <<
-		"3. Multiply layer1(top) and pattern2(bottom) and Screen text(top) with previous result(bottom)" << endl <<
-		"4. Multiply layer2(top) with circles(bottom) and Substract pattern2(top) with previous result(bottom)" << endl <<
-		"5. Overlay layer1(top) with pattern1(bottom)" << endl <<
-		"6. Add 200 to car's green channel" << endl <<
-		"7. Load car and scale (multiply) the red channel by 4, and the blue channel by 0" << endl <<
-		"8. Load car and write each channel to a separate file" << endl <<
-		"9. Combine layer_red, layer_blue and layer_green” into one file" << endl <<
-		"10. Rotate it text2 180 degrees" << endl;
-	// unsigned int task = 0;
-	// cin >> task;
-	unsigned int task = stoi(argv[1]);
-	switch (task)
-	{
-	case 1:
-		ReadingData(filePath+argv[2], image1);
-		ReadingData(filePath+argv[3], image2);
+// Task 1
+	cout << "*********Starting Task 1**********" << endl;
+	cout << endl;
 
-		image3.header = image1.header;
-		MultiplyingPixels(image1.pixels, image2.pixels, image3.pixels);
-		
-		TestingResults(image3, "part1.tga");
-		break;
-	case 2:
-		ReadingData(filePath+argv[2], image1);
-		ReadingData(filePath+argv[3], image2);
-		
-		image3.header = image1.header;
-		SubstractingPixels(image1, image2, image3.pixels);
-		TestingResults(image3, "part2.tga");
+	ReadingData(filePath+"layer1.tga", image1);
+	ReadingData(filePath+"pattern1.tga", image2);
 
-		break;
-	case 3:
-		ReadingData(filePath+argv[2], image1);
-		ReadingData(filePath+argv[3], image2);
-		image3.header = image1.header;
-		MultiplyingPixels(image1.pixels, image2.pixels, image3.pixels);
+	image3.header = image1.header;
+	MultiplyingPixels(image1.pixels, image2.pixels, image3.pixels);
+	
+	passedTest = TestingResults(image3, "part1.tga", "EXAMPLE_part1.tga");
+	if(passedTest){
+		totalScore+=11;
+	}
+	printScore();
+// Task 2
+	cout << "*********Starting Task 2**********" << endl;
+	cout << endl;
+	image1.pixels.clear();
+	image2.pixels.clear();
+	image3.pixels.clear();
+	ReadingData(filePath+"layer2.tga", image1);
+	ReadingData(filePath+"car.tga", image2);
+	
+	image3.header = image1.header;
+	SubstractingPixels(image1, image2, image3.pixels);
+	passedTest = false;
+	passedTest = TestingResults(image3, "part2.tga", "EXAMPLE_part2.tga");
 
-		image1.pixels.clear();
-		cout << "**Third image to be loaded** " << endl;
-		ReadingData(filePath+argv[4], image1);
-		ScreenningPixels(image1.pixels, image3.pixels, resultingPixels);
+	if(passedTest){
+		totalScore+=11;
+	}
+	printScore();
 
-		image3.pixels = resultingPixels;
+// Task 3
+	cout << "*********Starting Task 3**********" << endl;
+	cout << endl;
+	image1.pixels.clear();
+	image2.pixels.clear();
+	image3.pixels.clear();
+	resultingPixels.clear();
+	ReadingData(filePath+"layer1.tga", image1);
+	ReadingData(filePath+"pattern2.tga", image2);
+	image3.header = image1.header;
+	MultiplyingPixels(image1.pixels, image2.pixels, image3.pixels);
 
-		TestingResults(image3, "part3.tga");
+	image1.pixels.clear();
+	cout << "**Third image to be loaded** " << endl;
+	ReadingData(filePath+"text.tga", image1);
+	ScreenningPixels(image1.pixels, image3.pixels, resultingPixels);
 
-		break;
-	case 4:
-		ReadingData(filePath+argv[2], image1);
-		ReadingData(filePath+argv[3], image2);
+	image3.pixels = resultingPixels;
+	passedTest = false;
+	passedTest = TestingResults(image3, "part3.tga", "EXAMPLE_part3.tga");
 
-		image3.header = image1.header;
-		MultiplyingPixels(image1.pixels, image2.pixels, image3.pixels);
-		
-		image1.pixels.clear();
-		cout << "**Third image to be loaded** " << endl;
-		ReadingData(filePath+argv[4], image1);
-		SubstractingPixels(image1, image3, resultingPixels);
+	if(passedTest){
+		totalScore+=11;
+	}
+	printScore();
 
-		image3.pixels = resultingPixels;
-		
-		TestingResults(image3, "part4.tga");
-		break;
-	case 5:
-		ReadingData(filePath+argv[2], image1);
-		ReadingData(filePath+argv[3], image2);
+// Task 4
+	cout << "*********Starting Task 4**********" << endl;
+	cout << endl;
+	image1.pixels.clear();
+	image2.pixels.clear();
+	image3.pixels.clear();
+	resultingPixels.clear();
+	ReadingData(filePath+"layer2.tga", image1);
+	ReadingData(filePath+"circles.tga", image2);
 
-		image3.header = image1.header;
-		OverlayingPixels(image1.pixels, image2.pixels, image3.pixels);
+	image3.header = image1.header;
+	MultiplyingPixels(image1.pixels, image2.pixels, image3.pixels);
+	
+	image1.pixels.clear();
+	cout << "**Third image to be loaded** " << endl;
+	ReadingData(filePath+"pattern2.tga", image1);
+	SubstractingPixels(image1, image3, resultingPixels);
 
-		TestingResults(image3, "part5.tga");
-		break;
-	case 6:
-		ReadingData(filePath+argv[2], image3);
-		int value;
-		for (unsigned int i = 0; i < image3.pixels.size();i++) {
-			value = image3.pixels[i].greenVal + 200;
-			if (value > 255) {
-				image3.pixels[i].greenVal = 255;
+	image3.pixels = resultingPixels;
+	passedTest = false;
+	passedTest = TestingResults(image3, "part4.tga", "EXAMPLE_part4.tga");
+	if(passedTest){
+		totalScore+=11;
+	}
+	printScore();
+// Task 5
+	cout << "*********Starting Task 5**********" << endl;
+	cout << endl;
+	image1.pixels.clear();
+	image2.pixels.clear();
+	image3.pixels.clear();
+	ReadingData(filePath+"layer1.tga", image1);
+	ReadingData(filePath+"pattern1.tga", image2);
+
+	image3.header = image1.header;
+	OverlayingPixels(image1.pixels, image2.pixels, image3.pixels);
+	passedTest = false;
+	passedTest = TestingResults(image3, "part5.tga", "EXAMPLE_part5.tga");
+	if(passedTest){
+		totalScore+=11;
+	}
+	printScore();
+
+// Task 6
+	cout << "*********Starting Task 6**********" << endl;
+	cout << endl;
+	image1.pixels.clear();
+	image2.pixels.clear();
+	image3.pixels.clear();
+	ReadingData(filePath+"car.tga", image3);
+	int value;
+	for (unsigned int i = 0; i < image3.pixels.size();i++) {
+		value = image3.pixels[i].greenVal + 200;
+		if (value > 255) {
+			image3.pixels[i].greenVal = 255;
+		}
+		else {
+			image3.pixels[i].greenVal = value;
+		}
+	}
+	passedTest = false;
+	passedTest = TestingResults(image3, "part6.tga", "EXAMPLE_part6.tga");
+
+	if(passedTest){
+		totalScore+=11;
+	}
+	printScore();
+// Task 7
+	cout << "*********Starting Task 7**********" << endl;
+	cout << endl;
+	image1.pixels.clear();
+	image2.pixels.clear();
+	image3.pixels.clear();
+	ReadingData(filePath+"car.tga", image3);
+	//float temp;
+	for (unsigned int i = 0; i < image3.pixels.size();i++) {
+		//Red channel by 4 and blue channel by 0
+		if (image3.pixels[i].redVal != 0) {
+			if ((image3.pixels[i].redVal * 4) > 255) {
+				image3.pixels[i].redVal = 255;
 			}
 			else {
-				image3.pixels[i].greenVal = value;
+				image3.pixels[i].redVal *= 4;
 			}
 		}
-		
-		TestingResults(image3, "part6.tga");
-		break;
-
-	case 7:
-		ReadingData(filePath+argv[2], image3);
-		//float temp;
-		for (unsigned int i = 0; i < image3.pixels.size();i++) {
-			//Red channel by 4 and blue channel by 0
-			if (image3.pixels[i].redVal != 0) {
-				if ((image3.pixels[i].redVal * 4) > 255) {
-					image3.pixels[i].redVal = 255;
-				}
-				else {
-					image3.pixels[i].redVal *= 4;
-				}
-			}
-			if (image3.pixels[i].blueVal != 0) {
-				image3.pixels[i].blueVal *= 0;
-			}
+		if (image3.pixels[i].blueVal != 0) {
+			image3.pixels[i].blueVal *= 0;
 		}
-
-		TestingResults(image3, "part7.tga");
-		break;
-		
-	case 8:
-		ReadingData(filePath+argv[2], image1);		
-		image2.header = image1.header;
-
-		for (unsigned int i = 0; i < image1.pixels.size(); i++) {
-			image2.pixels.push_back(image1.pixels[i]);
-			image1.pixels[i].blueVal = image1.pixels[i].redVal;
-			image1.pixels[i].greenVal = image1.pixels[i].redVal;
-		}
-		TestingResults(image1, "part8_r.tga");
-		image1.pixels.clear();
-
-		for (unsigned int i = 0; i < image2.pixels.size(); i++) {
-			image1.pixels.push_back(image2.pixels[i]);
-			image2.pixels[i].redVal = image1.pixels[i].blueVal;
-			image2.pixels[i].greenVal = image1.pixels[i].blueVal;
-		}
-		TestingResults(image2, "part8_b.tga");
-		image2.pixels.clear();
-
-		for (unsigned int i = 0; i < image1.pixels.size(); i++) {
-			image2.pixels.push_back(image1.pixels[i]);
-			image1.pixels[i].redVal = image2.pixels[i].greenVal;
-			image1.pixels[i].blueVal = image2.pixels[i].greenVal;
-		}
-		TestingResults(image1, "part8_g.tga");
-		image1.pixels.clear();
-
-
-		break;
-
-	case 9:
-		ReadingData(filePath+argv[2], image1);//layer red
-		ReadingData(filePath+argv[3], image2);//layer blue
-		ReadingData(filePath+argv[4], image3);//layer green
-	
-		for (unsigned int i = 0; i < image1.pixels.size(); i++) {
-			image1.pixels[i].blueVal = image2.pixels[i].blueVal;
-			image1.pixels[i].greenVal = image3.pixels[i].greenVal;
-			
-		}
-
-		TestingResults(image1, "part9.tga");
-		break;
-
-	default:
-		ReadingData(filePath+argv[2], image3);
-
-		for (unsigned int i = image3.pixels.size()-1; i < -1 ; i--) {			
-			resultingPixels.push_back(image3.pixels[i]);
-		}
-
-		image3.pixels = resultingPixels;
-
-		TestingResults(image3, "part10.tga");
-		break;
 	}
-};
+	passedTest = false;
+	passedTest = TestingResults(image3, "part7.tga", "EXAMPLE_part7.tga");
 
+	if(passedTest){
+		totalScore+=11;
+	}	
+	printScore();
+// Task 8
+	cout << "*********Starting Task 8**********" << endl;
+	cout << endl;
+	image1.pixels.clear();
+	image2.pixels.clear();
+	image3.pixels.clear();
+	ReadingData(filePath+"car.tga", image1);		
+	image2.header = image1.header;
+	bool passedTest1, passedTest2, passedTest3 = false;
+
+	for (unsigned int i = 0; i < image1.pixels.size(); i++) {
+		image2.pixels.push_back(image1.pixels[i]);
+		image1.pixels[i].blueVal = image1.pixels[i].redVal;
+		image1.pixels[i].greenVal = image1.pixels[i].redVal;
+	}
+	passedTest1 = TestingResults(image1, "part8_r.tga", "EXAMPLE_part8_r.tga");
+	
+	image1.pixels.clear();
+
+	for (unsigned int i = 0; i < image2.pixels.size(); i++) {
+		image1.pixels.push_back(image2.pixels[i]);
+		image2.pixels[i].redVal = image1.pixels[i].blueVal;
+		image2.pixels[i].greenVal = image1.pixels[i].blueVal;
+	}
+	passedTest2 = TestingResults(image2, "part8_b.tga", "EXAMPLE_part8_b.tga");
+	image2.pixels.clear();
+
+	for (unsigned int i = 0; i < image1.pixels.size(); i++) {
+		image2.pixels.push_back(image1.pixels[i]);
+		image1.pixels[i].redVal = image2.pixels[i].greenVal;
+		image1.pixels[i].blueVal = image2.pixels[i].greenVal;
+	}
+	passedTest3 = TestingResults(image1, "part8_g.tga", "EXAMPLE_part8_g.tga");
+	image1.pixels.clear();
+
+	if(passedTest1 && passedTest2 && passedTest3){
+		totalScore+=11;
+	}
+	printScore();
+
+// Task 9
+	cout << "*********Starting Task 9**********" << endl;
+	cout << endl;
+	image1.pixels.clear();
+	image2.pixels.clear();
+	image3.pixels.clear();
+	ReadingData(filePath+"layer_red.tga", image1);//layer red
+	ReadingData(filePath+"layer_blue.tga", image2);//layer blue
+	ReadingData(filePath+"layer_green.tga", image3);//layer green
+
+	for (unsigned int i = 0; i < image1.pixels.size(); i++) {
+		image1.pixels[i].blueVal = image2.pixels[i].blueVal;
+		image1.pixels[i].greenVal = image3.pixels[i].greenVal;
+		
+	}
+	passedTest = false; 
+	passedTest = TestingResults(image1, "part9.tga", "EXAMPLE_part9.tga");
+	if(passedTest){
+		totalScore+=11;
+	}
+	printScore();
+// Task 10
+	cout << "*********Starting Task 10**********" << endl;
+	cout << endl;
+	image1.pixels.clear();
+	image2.pixels.clear();
+	image3.pixels.clear();
+	resultingPixels.clear();
+	ReadingData(filePath+"text2.tga", image3);
+
+	for (unsigned int i = image3.pixels.size()-1; i < -1 ; i--) {			
+		resultingPixels.push_back(image3.pixels[i]);
+	}
+
+	image3.pixels = resultingPixels;
+	passedTest = false;
+	passedTest = TestingResults(image3, "part10.tga", "EXAMPLE_part10.tga");
+
+	if(passedTest){
+		totalScore+=11;
+	}
+	printScore();
+};
